@@ -10,7 +10,7 @@ class ImagePublisher(Node):
     def __init__(self):
         super().__init__('image_publisher')
         
-        self.declare_parameter('video_source', 0)
+        self.declare_parameter('video_source', 2)
         self.declare_parameter('image_topic', 'camera/image_raw')
 
         image_topic = self.get_parameter('image_topic').get_parameter_value().string_value                
@@ -33,7 +33,9 @@ class ImagePublisher(Node):
     def timer_callback(self):
         ret, frame = self.cap.read()
         if ret:
-            msg = self.bridge.cv2_to_imgmsg(frame, encoding='bgr8')
+            height, width, _ = frame.shape
+            bottom_half = frame[height//2:height, 0:width]  # Crop the bottom half
+            msg = self.bridge.cv2_to_imgmsg(bottom_half, encoding='bgr8')
             self.publisher_.publish(msg)
         else:
             self.get_logger().error('Failed to capture image')

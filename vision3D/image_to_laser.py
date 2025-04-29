@@ -17,7 +17,7 @@ class ImageToLaserScan(Node):
         super().__init__('image_to_laser_scan')
         self.subscription = self.create_subscription(
             Image,
-            'camera/line_image',
+            'lane_detection/segemntation_mask',
             self.listener_callback,
             10)
         self.publisher_ = self.create_publisher(LaserScan, 'camera/laser_scan', 10)
