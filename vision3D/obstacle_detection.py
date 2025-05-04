@@ -7,12 +7,15 @@ import torch
 import numpy as np
 from transformers import AutoImageProcessor, SegformerForSemanticSegmentation
 import math
+import os
+from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 
 # --- Configuration & Parameters ---
-FINETUNED_MODEL_PATH = "/home/siva/ros2_ws/src/Shanti_2025/vision3D/vision3D/finetuned_model/"
-INPUT_IMAGE_TOPIC = 'camera/image_raw' # Topic from img_pub.py (default)
-OUTPUT_PROCESSED_TOPIC = 'lane_detection/image_processed'
-OUTPUT_MASK_TOPIC = 'lane_detection/segmentation_mask'
+# Default values - will be overridden by ROS parameters
+DEFAULT_MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "finetuned_model/")
+DEFAULT_INPUT_TOPIC = 'camera/image_raw'
+DEFAULT_PROCESSED_TOPIC = 'lane_detection/image_processed'
+DEFAULT_MASK_TOPIC = 'lane_detection/segmentation_mask'
 
 # --- Static Parameters (from original trackbar initials) ---
 canny_low = 50
@@ -56,20 +59,43 @@ class ObstacleDetectorNode(Node):
         super().__init__('obstacle_detector_node')
         self.get_logger().info('Initializing Obstacle Detector Node...')
 
+        # --- Declare ROS Parameters ---
+        # Topic parameters with string descriptions
+        self.declare_parameter('model_path', DEFAULT_MODEL_PATH, 
+            ParameterDescriptor(description='Path to the ML model directory'))
+        self.declare_parameter('input_topic', DEFAULT_INPUT_TOPIC, 
+            ParameterDescriptor(description='Input camera topic'))
+        self.declare_parameter('processed_topic', DEFAULT_PROCESSED_TOPIC, 
+            ParameterDescriptor(description='Output processed image topic'))
+        self.declare_parameter('mask_topic', DEFAULT_MASK_TOPIC, 
+            ParameterDescriptor(description='Output segmentation mask topic'))
+
+         # --- Get Parameters ---
+        model_path = self.get_parameter('model_path').get_parameter_value().string_value
+        input_topic = self.get_parameter('input_topic').get_parameter_value().string_value
+        processed_topic = self.get_parameter('processed_topic').get_parameter_value().string_value
+        mask_topic = self.get_parameter('mask_topic').get_parameter_value().string_value
+        
+        # Log parameter values
+        self.get_logger().info(f"Using model path: {model_path}")
+        self.get_logger().info(f"Input topic: {input_topic}")
+        self.get_logger().info(f"Output processed topic: {processed_topic}")
+        self.get_logger().info(f"Output mask topic: {mask_topic}")
+
         # --- Load Model ---
         self.get_logger().info("Loading model...")
         try:
             # Explicitly disable fast tokenizer usage if causing issues, though default should be fine.
             # self.processor = AutoImageProcessor.from_pretrained(FINETUNED_MODEL_PATH, use_fast=False)
-            self.processor = AutoImageProcessor.from_pretrained(FINETUNED_MODEL_PATH)
-            self.model = SegformerForSemanticSegmentation.from_pretrained(FINETUNED_MODEL_PATH)
+            self.processor = AutoImageProcessor.from_pretrained(model_path)
+            self.model = SegformerForSemanticSegmentation.from_pretrained(model_path)
             self.get_logger().info("Model loaded.")
             self.model.eval()
-            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            self.model.to(self.device)
+            # self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            self.device = torch.device("cpu")
             self.get_logger().info(f"Using device: {self.device}")
         except Exception as e:
-            self.get_logger().error(f"Failed to load model from {FINETUNED_MODEL_PATH}: {e}")
+            self.get_logger().error(f"Failed to load model from {model_path}: {e}")
             # Optionally raise the error or handle differently
             rclpy.shutdown() # Shutdown ROS if model fails critical loading
             raise e # Reraise exception to prevent node from continuing in broken state
@@ -79,14 +105,14 @@ class ObstacleDetectorNode(Node):
         self.bridge = CvBridge()
         self.image_sub = self.create_subscription(
             Image,
-            INPUT_IMAGE_TOPIC,
+            input_topic,
             self.image_callback,
             10) # QoS profile depth 10
-        self.processed_pub = self.create_publisher(Image, OUTPUT_PROCESSED_TOPIC, 10)
-        self.mask_pub = self.create_publisher(Image, OUTPUT_MASK_TOPIC, 10)
-        self.get_logger().info(f"Subscribed to {INPUT_IMAGE_TOPIC}")
-        self.get_logger().info(f"Publishing processed images to {OUTPUT_PROCESSED_TOPIC}")
-        self.get_logger().info(f"Publishing segmentation masks to {OUTPUT_MASK_TOPIC}")
+        self.processed_pub = self.create_publisher(Image, processed_topic, 10)
+        self.mask_pub = self.create_publisher(Image, mask_topic, 10)
+        self.get_logger().info(f"Subscribed to {input_topic}")
+        self.get_logger().info(f"Publishing processed images to {processed_topic}")
+        self.get_logger().info(f"Publishing segmentation masks to {mask_topic}")
 
         # Store fixed parameters (consider making these ROS parameters later)
         self.canny_low = canny_low
