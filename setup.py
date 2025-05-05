@@ -26,6 +26,7 @@ setup(
             'img_pub = vision3D.img_pub:main',                    
             'image_to_laser = vision3D.image_to_laser:main',            
             'obstacle_detection = vision3D.obstacle_detection:main',
+            'img_serve = vision3D.img_serve:main',
         ],
     },
 )
