@@ -123,6 +123,12 @@ class ObstacleDetectorNode(Node):
              self.mask_pub.publish(mask_msg)
              self.get_logger().debug(f'Published segmentation mask to {self.mask_pub.topic_name}')
 
+             # Convert processed frame to ROS Image message and publish
+             processed_msg = self.bridge.cv2_to_imgmsg(processed_frame, encoding='bgr8')
+             processed_msg.header = msg.header  # Preserve timestamp and frame_id
+             self.processed_pub.publish(processed_msg)
+             self.get_logger().debug(f'Published processed image to {self.processed_pub.topic_name}')
+
 
         except Exception as e:
             # Log detailed error including traceback
