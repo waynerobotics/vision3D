@@ -49,7 +49,7 @@ setup(
             'image_to_laser = vision3D.image_to_laser:main',            
             'obstacle_detection = vision3D.obstacle_detection:main',
             'img_serve = vision3D.img_serve:main',
-            'lane_segmentation_to_pointcloud = vison3D.lane_segmentation_to_pointcloud:main',
+            'lane_segmentation_to_pointcloud = vision3D.lane_segmentation_to_pointcloud:main',
         ],
     },
 )
