@@ -35,6 +35,10 @@ setup(
     name=package_name,
     version='0.0.0',
     packages=find_packages(exclude=['test']),
+    package_data={
+        package_name: ['finetuned_model/*']
+    },
+    include_package_data=True,
     data_files=data_files,
     install_requires=['setuptools'],
     zip_safe=True,
@@ -49,7 +53,7 @@ setup(
             'image_to_laser = vision3D.image_to_laser:main',            
             'obstacle_detection = vision3D.obstacle_detection:main',
             'img_serve = vision3D.img_serve:main',
-            'lane_segmentation_to_pointcloud = vison3D.lane_segmentation_to_pointcloud:main',
+            'lane_segmentation_to_pointcloud = vision3D.lane_segmentation_to_pointcloud:main',
         ],
     },
 )
