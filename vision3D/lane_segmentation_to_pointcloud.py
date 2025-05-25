@@ -17,7 +17,8 @@ class LaneSegmentationToPointCloud(Node):
         self.declare_parameter('fy', 500.0)
         self.declare_parameter('cx', 320.0)
         self.declare_parameter('cy', 240.0)
-        self.declare_parameter('camera_topic', '/camera/camera_sensor/image_raw')
+        # self.declare_parameter('camera_topic', '/camera/camera_sensor/image_raw')
+        self.declare_parameter('camera_topic', '/lane_detection/segmentation_mask')
         self.declare_parameter('output_topic', '/lane_pointcloud')
 
         self.h = self.get_parameter('camera_height').value
@@ -25,6 +26,8 @@ class LaneSegmentationToPointCloud(Node):
         self.fy = self.get_parameter('fy').value
         self.cx = self.get_parameter('cx').value
         self.cy = self.get_parameter('cy').value
+
+        self.fromMask = True
 
         self.bridge = CvBridge()
         self.image_sub = self.create_subscription(Image, 
@@ -36,11 +39,16 @@ class LaneSegmentationToPointCloud(Node):
         print ('starting lane to point cloud')
 
     def image_callback(self, msg):
-        img = self.bridge.imgmsg_to_cv2(msg, desired_encoding='mono8')
-
-        # Simple lane segmentation by thresholding
-        _, mask = cv2.threshold(img, 175, 255, cv2.THRESH_BINARY)
-        print('mask shape:', mask.shape);
+        if(self.fromMask):
+            # Convert ROS Image message to CV2 image
+            mask = self.bridge.imgmsg_to_cv2(msg, desired_encoding='mono8')
+        else:
+            # Convert ROS Image message to CV2 image and apply thresholding
+            img = self.bridge.imgmsg_to_cv2(msg, desired_encoding='mono8')
+            # Simple lane segmentation by thresholding
+            _, mask = cv2.threshold(img, 175, 255, cv2.THRESH_BINARY)
+        
+        print('mask shape:', mask.shape)
         
         # Get coordinates of white pixels
         ys, xs = np.where(mask > 175)
