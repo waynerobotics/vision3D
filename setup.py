@@ -49,6 +49,7 @@ setup(
             'image_to_laser = vision3D.image_to_laser:main',            
             'obstacle_detection = vision3D.obstacle_detection:main',
             'img_serve = vision3D.img_serve:main',
+            'intensity_filter = vision3D.intensity_filter:main',
         ],
     },
 )

@@ -10,7 +10,7 @@ class ImagePublisher(Node):
     def __init__(self):
         super().__init__('image_publisher')
         
-        self.declare_parameter('video_source', 0)
+        self.declare_parameter('video_source', 3)
         self.declare_parameter('image_topic', 'camera/image_raw')
         self.declare_parameter('output_width', 1280)
         self.declare_parameter('output_height', 800) 

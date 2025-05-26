@@ -13,7 +13,7 @@ def generate_launch_description():
     # Declare launch arguments
     video_source_arg = DeclareLaunchArgument(
         'video_source',
-        default_value='0',
+        default_value='2',
         description='Video source for the camera (device number or file path)'
     )
     

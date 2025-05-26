@@ -178,6 +178,7 @@ class ObstacleDetectorNode(Node):
         with torch.no_grad():
             outputs = self.model(**inputs)
         logits = outputs.logits
+        
         # Interpolate logits to original frame size
         upsampled_logits = torch.nn.functional.interpolate(
             logits, size=(frame_height, frame_width), mode='bilinear', align_corners=False
